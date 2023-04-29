@@ -49,7 +49,7 @@ Using these best practices allows for key metadata about the package to be known
     product-universal-1.21.42.pkg
 
 ### Which names to use?
-Recommending that a package filename should include the vendor/developer name and/or the product/project name is sometimes easier said than done. This can be due to multiple factors, including single-product developers when the vendor name and the product name are identical; e.g. [BlueJ](https://www.bluej.org/), Dropbox, and TIDAL to name a few.
+Recommending that a package filename should include the vendor/developer name and/or the product/project name is sometimes easier said than done. This can be due to multiple factors, including single-product developers when the vendor name and the product name are identical; e.g. [BlueJ](https://www.bluej.org), Dropbox, and TIDAL to name a few.
 
 Ultimately, the package filename should be recognizable and easy to identify what is going to be installed.
 
@@ -115,7 +115,7 @@ curl -LOJ "https://httpbin.org/response-headers?content-disposition=%20attachmen
 cat "product-arm64-1.21.42.pkg"
 ```
 
-* https://dl.pstmn.io/download/latest/osx ([Postman](https://www.postman.com/))
+* https://dl.pstmn.io/download/latest/osx ([Postman](https://www.postman.com))
 
   `Content-Disposition: attachment; filename=Postman%20v9.11.0%20for%20macOS%20(x64).zip`
 
@@ -129,7 +129,7 @@ cat "product-arm64-1.21.42.pkg"
 
 
 ### Use TLS (HTTPS)
-Serving software downloads from an insecure HTTP URL allows "person-in-the-middle" attacks like [this one from 2016](https://www.macrumors.com/2016/02/09/sparkle-hijacking-vulnerability/). Prevent this by ensuring all your web hosts and content distribution servers are using HTTPS with valid TLS certificates.
+Serving software downloads from an insecure HTTP URL allows "person-in-the-middle" attacks like [this one from 2016](https://www.macrumors.com/2016/02/09/sparkle-hijacking-vulnerability). Prevent this by ensuring all your web hosts and content distribution servers are using HTTPS with valid TLS certificates.
 
 ### Use a known domain
 Software package downloads should come from a domain belonging to the developer to help promote trust in the download.  For example, it is fairly easy for a bad actor to create any S3 bucket name that may match your download, e.g. `https://product-name-latest.s3.amazonaws.com/product-arm64-1.21.42.pkg`
@@ -168,11 +168,11 @@ Software package downloads should come from a domain belonging to the developer 
 
 ## Other Resources
 * [Packaging for Apple Administrators](https://books.apple.com/us/book/packaging-for-apple-administrators/id1173928620)
-* [The Encylopaedia of Packages – MacDevOps YVR ’21](https://scriptingosx.com/mdo21/)
+* [The Encyclopedia of Packages – MacDevOps YVR ’21](https://scriptingosx.com/mdo21)
 * [http://s.sudre.free.fr/Stuff/Ivanhoe/FLAT.html](http://s.sudre.free.fr/Stuff/Ivanhoe/FLAT.html)
 * [Guidelines for Mac software packaging](https://wiki.afp548.com/index.php/Guidelines_for_Mac_software_packaging)
   * [Original "The Commandments of Packaging" on Posterous by Gary Larizza](https://web.archive.org/web/20130304070133/http://glarizza.posterous.com/the-commandments-of-packaging)
-* [Mac Package Hall of Shame](https://macpkghallofshame.tumblr.com/)
+* [Mac Package Hall of Shame](https://macpkghallofshame.tumblr.com)
 
 
 ## Other Thoughts
