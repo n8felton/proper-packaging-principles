@@ -95,7 +95,7 @@ Using the output of `arch` or `uname -m` allows for automation when acquiring so
 ### `Content-Disposition` HTTP Header
 This can allow for saving downloaded files with relevant metadata, such as architecture type and/or version number. 
 
-For example, a download URL of `https://dl.example.com/product/arch/release/product.pkg` should have the `Content-Disoposition` HTTP header set to `Content-Disposition: attachment; filename="product-arm64-1.21.42.pkg"`. This can help prevent saving the download with filename such as `product.pkg`, which can result in not knowing what version of the software package you have downloaded, while also preventing unhelpful filenames such as `product (1).pkg` and `product (2).pkg` from cluttering up your Downloads folder.
+For example, a download URL of `https://dl.example.com/product/arch/release/product.pkg` should have the `Content-Disposition` HTTP header set to `Content-Disposition: attachment; filename="product-arm64-1.21.42.pkg"`. This can help prevent saving the download with filename such as `product.pkg`, which can result in not knowing what version of the software package you have downloaded, while also preventing unhelpful filenames such as `product (1).pkg` and `product (2).pkg` from cluttering up your Downloads folder.
 
 This header is supported by modern browsers, as well as many of the tools and languages that are used by Mac Admins, such as 
 * [curl](https://curl.se/docs/manpage.html#-J)
