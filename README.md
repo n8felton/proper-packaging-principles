@@ -129,7 +129,7 @@ cat "product-arm64-1.21.42.pkg"
 
 
 ### Use TLS (HTTPS)
-TODO: Need a good blurb about why to use HTTPS
+Serving software downloads from an insecure HTTP URL allows "person-in-the-middle" attacks like [this one from 2016](https://www.macrumors.com/2016/02/09/sparkle-hijacking-vulnerability/). Prevent this by ensuring all your web hosts and content distribution servers are using HTTPS with valid TLS certificates.
 
 ### Use a known domain
 Software package downloads should come from a domain belonging to the developer to help promote trust in the download.  For example, it is fairly easy for a bad actor to create any S3 bucket name that may match your download, e.g. `https://product-name-latest.s3.amazonaws.com/product-arm64-1.21.42.pkg`
