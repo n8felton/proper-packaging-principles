@@ -154,6 +154,7 @@ Software package downloads should come from a domain belonging to the developer 
 * [Embedding a command-line tool in a sandboxed app](https://developer.apple.com/documentation/xcode/embedding-a-helper-tool-in-a-sandboxed-app)
 * [Embedding nonstandard code structures in a bundle](https://developer.apple.com/documentation/xcode/embedding-nonstandard-code-structures-in-a-bundle)
 * [Distribution XML Reference](https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/DistributionDefinitionRef/Chapters/Distribution_XML_Ref.html)
+* [Installer-dev mailing list](https://lists.apple.com/mailman/listinfo/installer-dev)
 
 ## macOS Software Packaging Tools
 ### macOS Built-in
@@ -162,9 +163,16 @@ Software package downloads should come from a domain belonging to the developer 
 * [installer](x-man-page://installer)
 * [pkgutil](x-man-page://pkgutil)
 
-### Third-party
+### Third-party Package Creation
 * [munki-pkg](https://github.com/munki/munki-pkg)
 * [The Luggage](https://github.com/unixorn/luggage)
+* [Packages](http://s.sudre.free.fr/Software/Packages/about.html)
+
+### Third-party Utilities
+* [Suspicious Package](https://www.mothersruin.com/software/SuspiciousPackage)
+* [Pacifist](https://www.charlessoft.com)
+* [Apparency](https://mothersruin.com/software/Apparency)
+
 
 ## Other Resources
 * [Packaging for Apple Administrators](https://books.apple.com/us/book/packaging-for-apple-administrators/id1173928620)
@@ -173,6 +181,10 @@ Software package downloads should come from a domain belonging to the developer 
 * [Guidelines for Mac software packaging](https://wiki.afp548.com/index.php/Guidelines_for_Mac_software_packaging)
   * [Original "The Commandments of Packaging" on Posterous by Gary Larizza](https://web.archive.org/web/20130304070133/http://glarizza.posterous.com/the-commandments-of-packaging)
 * [Mac Package Hall of Shame](https://macpkghallofshame.tumblr.com)
+* [PackageMaker How-to](http://s.sudre.free.fr/Stuff/PackageMaker_Howto.html)
+* [Installation - The Lost Scrolls](http://s.sudre.free.fr/Stuff/Installer/Menu.html)
+* [Flat Package Format - The missing documentation](http://s.sudre.free.fr/Stuff/Ivanhoe/FLAT.html)
+* [Packages - Resources](http://s.sudre.free.fr/Software/Packages/resources.html)
 
 
 ## Other Thoughts
