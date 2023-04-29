@@ -179,7 +179,6 @@ Software package downloads should come from a domain belonging to the developer 
 ## Other Resources
 * [Packaging for Apple Administrators](https://books.apple.com/us/book/packaging-for-apple-administrators/id1173928620)
 * [The Encyclopedia of Packages – MacDevOps YVR ’21](https://scriptingosx.com/mdo21)
-* [http://s.sudre.free.fr/Stuff/Ivanhoe/FLAT.html](http://s.sudre.free.fr/Stuff/Ivanhoe/FLAT.html)
 * [Guidelines for Mac software packaging](https://wiki.afp548.com/index.php/Guidelines_for_Mac_software_packaging)
   * [Original "The Commandments of Packaging" on Posterous by Gary Larizza](https://web.archive.org/web/20130304070133/http://glarizza.posterous.com/the-commandments-of-packaging)
 * [Mac Package Hall of Shame](https://macpkghallofshame.tumblr.com)
