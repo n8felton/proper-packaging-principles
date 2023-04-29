@@ -115,6 +115,8 @@ curl -LOJ "https://httpbin.org/response-headers?content-disposition=%20attachmen
 cat "product-arm64-1.21.42.pkg"
 ```
 
+##### Real-world Examples
+
 * https://dl.pstmn.io/download/latest/osx ([Postman](https://www.postman.com))
 
   `Content-Disposition: attachment; filename=Postman%20v9.11.0%20for%20macOS%20(x64).zip`
