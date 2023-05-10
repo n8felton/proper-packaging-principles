@@ -138,6 +138,7 @@ Software package downloads should come from a domain belonging to the developer 
 
 #### Bad Real-world Examples
 * https://cellprofiler-releases.s3.amazonaws.com/CellProfiler-macOS-4.2.1.zip
+* https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-darwin-arm64
 
 # References and Resources
 
