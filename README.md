@@ -4,24 +4,25 @@ These proper packaging principles are meant to be a guideline for software devel
 
 ## Summary
 
- 1. **Build native macOS packages**
+1. **Build native macOS packages**
 
      Using third-party package formats (such as [install4j](https://www.ej-technologies.com/products/install4j/overview.html)) or custom internal software installers (Looking at you, Adobe...) is never a good idea and needlessly increases the complexity of installing software. Most (if not all) Mac management tools have native support for deploying native macOS packages.
 
- 2.  **Version numbers go up**
+2.  **Version numbers go up**
 
      Most tools available to manage software deployments use version numbers to determine if a software package needs to be installed or updated. No matter how minor a change to software package, the version number should be incremented to ensure these tools know they need to install or update the package.
 The [recommended format](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring) is three period-separated integers, such as 1.21.42. See also: [semver](https://semver.org)
 
- 3. **Naming conventions are necessary and helpful**
+3. **Naming conventions are necessary and helpful**
 
      Give your packages meaningful names and version numbers.  `Installer.pkg` or `product.pkg` is not helpful and can lead to filenames such as `Installer (1).pkg` and `product (2).pkg` cluttering up the Downloads folder. Instead, consider filenames that include your vendor and/or product name, compiled architecture, and version number, e.g. `product-{arch}-{version}.pkg`. 
      
      See [Appendix A](#appendix-a---package-filename-naming-conventions) for more details.
 
- 4.  **Downloading packages should be easy**
+4.  **Downloading packages should be easy**
 
-     A static URL should be provided to download the latest package of the software.
+     A public, static URL should be provided to download the latest package of the software. While there are exceptions, _MOST_ software should
+     be available without the need for _ANY_ authentication (See [Software configuration and licensing should be done separately](#licensing-separately)).
      
      See [Appendix B](#appendix-b---static-download-urls) for more details.
 
@@ -29,6 +30,7 @@ The [recommended format](https://developer.apple.com/documentation/bundleresourc
 
      In the age of Mobile Device Management (MDM), installation via the [`InstallApplication`](https://developer.apple.com/documentation/devicemanagement/installapplicationcommand/command) command is possible, in addition to command line installations via the `installer` command.
 
+<!----><a name="licensing-separately"></a>
 6. **Software configuration and licensing should be done separately**
 
     Any necessary configuration or licensing of software should be done outside of the native macOS package. In a managed environment, this ideally should be handled using MDM Profiles. For non-managed, end-user environments, this should be handled by the software using something like a first-run dialog.
