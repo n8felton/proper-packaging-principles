@@ -194,7 +194,7 @@ Software package downloads should come from a domain belonging to the developer 
 ## Other Thoughts
 * It's ***macOS***. It is no longer *Mac OS X*, or *OS X*, or *OSX*.
 
-  In the [Apple Style Guide](https://help.apple.com/applestyleguide)  there is  [a specific section](https://help.apple.com/applestyleguide/#/apsg72b28652?sub=apd246e83209)  about  _**Mac operating systems**_  that contains style guidelines for how to reference macOS versions.
+  In the [Apple Style Guide](https://support.apple.com/guide/applestyleguide) there is a [_**Mac operating systems**_](https://support.apple.com/guide/applestyleguide/m-apsg72b28652/web#apd246e83209) section that contains style guidelines for how to reference macOS versions.
 
 * If you have a product targeting *Windows*, the Mac counterpart should be *macOS*, not *Mac*. *Mac* is the hardware, akin to *Dell*, *Lenovo*, or *HP*.
     * *Exception*: *mac* is an acceptable 3-letter short notation of *macOS* to match *win* for *Windows*
