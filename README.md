@@ -55,6 +55,54 @@ Recommending that a package filename should include the vendor/developer name an
 
 Ultimately, the package filename should be recognizable and easy to identify what is going to be installed.
 
+## Component Package Identifier
+
+Many popular software deployment tools reference the macOS "receipts database" to query metadata about installed software packages, such as file paths, package versions, and installation dates. This information is used to determine if a software package needs to be updated.
+
+This information is linked to the component package identifier. Therefore, it is highly recommended to choose a recognizable identifier that follows macOS conventions and to maintain consistency with it.
+
+> The macOS Installer recognizes a package as an upgrade to an already-installed package only if the package identifiers match.  Therefore, it is advisable to set a meaningful, consistent identifier when you build the package.
+>
+> — <cite>`pkgbuild` man page</cite>
+
+Component package identifiers typically use reverse domain name notation, for example, `com.example.Product`.
+
+### Component Package Identifier Examples
+
+#### Good Component Package Identifier Examples
+
+    com.example.product
+    com.example.Product
+    com.example.Product.15 †
+
+##### Good Component Package Identifier Real-world Examples
+
+    com.amazon.corretto.17 †
+    com.apple.MacEvalUtility
+    com.tapbots.Ivory
+
+#### Better Component Package Identifier Examples
+
+    com.example.pkg.Product
+    com.example.pkg.Product15 †
+
+##### Better Component Package Identifier Real-world Examples
+
+    com.apple.pkg.Xcode
+    com.ninxsoft.pkg.mist-cli
+    fr.whitebox.pkg.Packages
+
+###### † Versioning Component Package Identifiers
+
+Versions should only be used in component package identifiers when multiple versions of a product can be installed, used, and updated side-by-side. Otherwise, version information does not belong in the component package identifier.
+
+### Component Package Identifier Related Commands
+
+`pkgutil --pkgs` — List all installed package IDs
+
+`pkgutil --pkg-info <package-id>` — Print extended information about the specified `<package-id>`
+
+
 # Appendix B - Static Download URLs
 ## Best Practices
 1. The URL should be static and NOT contain any metadata that will change with each package.
@@ -160,6 +208,7 @@ Software package downloads should come from a domain belonging to the developer 
 * [Embedding nonstandard code structures in a bundle](https://developer.apple.com/documentation/xcode/embedding-nonstandard-code-structures-in-a-bundle)
 * [Distribution XML Reference](https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/DistributionDefinitionRef/Chapters/Distribution_XML_Ref.html)
 * [Installer-dev mailing list](https://lists.apple.com/mailman/listinfo/installer-dev)
+* [Uniform Type Identifier Concepts](https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/understanding_utis/understand_utis_conc/understand_utis_conc.html)
 
 ## macOS Software Packaging Tools
 ### macOS Built-in
