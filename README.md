@@ -1,6 +1,6 @@
 # Proper Packaging Principles
 
-These proper packaging principles are meant to be a guideline for software developers on how to build and host software packages for macOS applications. These are based on experience from members of the [MacAdmins community](https://macadmins.org) who have collectively spent _hundreds of thousands_ of hours deploying and maintaining software. The goal is to help you, help us. When software if packaged properly, it is easy to deploy, update, and manage and allows MacAdmins and end users alike ensure they are running the latest version of your software.
+These proper packaging principles are meant to be a guideline for software developers on how to build and host software packages for macOS applications. These are based on experience from members of the [MacAdmins community](https://macadmins.org) who have collectively spent _hundreds of thousands_ of hours deploying and maintaining software. The goal is to help you, help us. When software is properly packaged, it becomes easy to deploy, update, and manage. This enables both MacAdmins and end users to ensure they are running the latest version of your software.
 
 ## Summary
 
