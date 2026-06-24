@@ -24,7 +24,13 @@ These proper packaging principles are meant to be a guideline for software devel
    A public, static URL should be provided to download the latest package of the software. While there are exceptions, _MOST_ software should
    be available without the need for _ANY_ authentication (See [Software configuration and licensing should be done separately](#licensing-separately)).
 
-   See [Appendix B](#appendix-b---static-download-urls) for more details.
+   See [Appendix B](#appendix-b---download-urls) for more details on the download URL itself.
+
+1. **Serve downloads with proper HTTP semantics**
+
+   Beyond a clean URL, the server should return headers that let tools save files with correct names (`Content-Disposition`), detect changes without re-downloading (`ETag` / `Last-Modified`), verify integrity (a published checksum), and resume interrupted transfers (`Accept-Ranges`).
+
+   See [Appendix C](#appendix-c---serving-downloads-http-headers--integrity) for more details.
 
 1. **Do not assume that your package will be installed interactively via the GUI (Installer.app)**
 
@@ -61,15 +67,16 @@ Recommending that a package filename should include the vendor/developer name an
 
 Ultimately, the package filename should be recognizable and easy to identify what is going to be installed.
 
-# Appendix B - Static Download URLs
+# Appendix B - Download URLs
 
 ## Best Practices
 
 1. The URL should be static and NOT contain any metadata that will change with each package.
 1. If including the architecture type, use `uname -m` values, or `universal`.
-1. Use the `Content-Disposition` HTTP header with type `attachment` and the `filename` parameter.
 1. Use TLS (HTTPS)
 1. Use a domain name that matches the vendor and/or product name(s)
+
+How the server _serves_ that download — response headers, integrity, and resumability — is covered separately in [Appendix C](#appendix-c---serving-downloads-http-headers--integrity).
 
 ### Static URL
 
@@ -118,6 +125,31 @@ Prefer `uname -m` over the `arch` command. On macOS, `arch` with no arguments re
 curl -LOJ https://example.com/download/product/$(uname -m)/release/latest
 ```
 
+### Use TLS (HTTPS)
+
+Serving software downloads from an insecure HTTP URL allows "person-in-the-middle" attacks like [this one from 2016](https://www.macrumors.com/2016/02/09/sparkle-hijacking-vulnerability). Prevent this by ensuring all your web hosts and content distribution servers are using HTTPS with valid TLS certificates.
+
+### Use a known domain
+
+Software package downloads should come from a domain belonging to the developer to help promote trust in the download. For example, it is fairly easy for a bad actor to create any S3 bucket name that may match your download, e.g. `https://product-name-latest.s3.amazonaws.com/product-arm64-1.21.42.pkg`
+
+#### Bad Real-world Examples
+
+- https://cellprofiler-releases.s3.amazonaws.com/CellProfiler-macOS-4.2.1.zip
+- https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-darwin-arm64
+
+# Appendix C - Serving Downloads (HTTP Headers & Integrity)
+
+Once a [download URL](#appendix-b---download-urls) exists, how the server responds to a request for it matters just as much as the URL itself. The following practices help tools and automation save files correctly, avoid re-downloading unchanged packages, verify integrity, and recover from interrupted transfers.
+
+## Best Practices
+
+1. Use the `Content-Disposition` HTTP header with type `attachment` and the `filename` parameter.
+1. Provide an `ETag` HTTP header that changes whenever the package contents change.
+1. Provide a `Last-Modified` HTTP header that reflects when the package was last updated.
+1. Publish a cryptographic checksum (such as SHA-256) of the package so downloads can be verified.
+1. Support HTTP range requests, advertised via the `Accept-Ranges` header, so large package downloads can be resumed.
+
 ### `Content-Disposition` HTTP Header
 
 This can allow for saving downloaded files with relevant metadata, such as architecture type and/or version number.
@@ -157,18 +189,80 @@ cat "product-arm64-1.21.42.pkg"
 
   `Content-Disposition: attachment; filename=EpicInstaller-20.1.0.dmg`
 
-### Use TLS (HTTPS)
+### `ETag` HTTP Header
 
-Serving software downloads from an insecure HTTP URL allows "person-in-the-middle" attacks like [this one from 2016](https://www.macrumors.com/2016/02/09/sparkle-hijacking-vulnerability). Prevent this by ensuring all your web hosts and content distribution servers are using HTTPS with valid TLS certificates.
+The [`ETag`](https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/ETag) HTTP header provides a unique identifier for a specific version of a resource. When the package contents change, the `ETag` value should change as well. This allows automation to determine whether the package at a static URL has changed without downloading the entire file.
 
-### Use a known domain
+Tools and automation can issue a conditional request using the [`If-None-Match`](https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/If-None-Match) request header with a previously stored `ETag` value. If the resource has not changed, the server responds with `304 Not Modified` and no body, saving bandwidth and time. If it has changed, the server responds with `200 OK`, the new content, and an updated `ETag`.
 
-Software package downloads should come from a domain belonging to the developer to help promote trust in the download. For example, it is fairly easy for a bad actor to create any S3 bucket name that may match your download, e.g. `https://product-name-latest.s3.amazonaws.com/product-arm64-1.21.42.pkg`
+Prefer a strong `ETag` (one without the `W/` weak-validator prefix) derived from the package contents, such as a hash of the file. Avoid values that change on every request or that are tied to a specific server in a load-balanced fleet, as these defeat the purpose of caching and change detection.
 
-#### Bad Real-world Examples
+Ideally, provide both an `ETag` and a [`Last-Modified`](#last-modified-http-header) header: the `ETag` acts as the strong, content-derived validator while `Last-Modified` serves as a fallback. Per [RFC 9110](https://datatracker.ietf.org/doc/html/rfc9110#section-13.1.3), when a client sends both `If-None-Match` and `If-Modified-Since`, the server evaluates `If-None-Match` first.
 
-- https://cellprofiler-releases.s3.amazonaws.com/CellProfiler-macOS-4.2.1.zip
-- https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-darwin-arm64
+```
+ETag: "a1b2c3d4e5f6"
+```
+
+You can test conditional requests with curl using the `--etag-save` and `--etag-compare` options:
+
+```
+curl -LOJ --etag-save product.etag https://example.com/download/product.pkg
+curl -LOJ --etag-compare product.etag --etag-save product.etag https://example.com/download/product.pkg
+```
+
+### `Last-Modified` HTTP Header
+
+The [`Last-Modified`](https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/Last-Modified) HTTP header indicates the date and time the package was last changed. Like the `ETag` header, this allows automation to determine whether a package at a static URL has been updated without downloading the entire file.
+
+Tools can issue a conditional request using the [`If-Modified-Since`](https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/If-Modified-Since) request header with a previously stored `Last-Modified` value. If the resource has not changed since that time, the server responds with `304 Not Modified` and no body. If it has changed, the server responds with `200 OK` and the new content.
+
+The value must be an [HTTP-date](https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/Date#syntax) in GMT, as defined by [RFC 9110, Section 5.6.7](https://datatracker.ietf.org/doc/html/rfc9110#section-5.6.7), and should accurately reflect when the package contents actually changed rather than when the file was deployed or copied.
+
+```
+Last-Modified: Mon, 02 Jan 2006 15:04:05 GMT
+```
+
+You can inspect this header with curl by requesting only the headers:
+
+```
+curl -sI https://example.com/download/product.pkg | grep -i last-modified
+```
+
+#### Validators and Redirects
+
+If your static download URL [redirects](#static-url) to another location, such as a versioned object on a CDN, the `ETag` and `Last-Modified` headers must be present on the final `200 OK` response, not on the intermediate `3xx` redirect. Tools that follow the redirect chain (e.g. `curl -L`) read the validators from the final response, so headers set only on the redirect will be ignored.
+
+### Package Checksum
+
+Publishing a cryptographic checksum, such as SHA-256, allows downloaders to verify that the bytes they received are authentic and uncorrupted. This is distinct from change detection: an `ETag` is **not** an integrity guarantee, as a server can set it to any value, while a checksum lets a downloader confirm the package matches what the developer published.
+
+Checksums are commonly published as a sidecar file alongside the package (e.g. `product.pkg.sha256`) or listed on the download or release page.
+
+```
+shasum -a 256 product-arm64-1.21.42.pkg
+```
+
+Downloaders can verify against a published checksum:
+
+```
+echo "a1b2c3...  product-arm64-1.21.42.pkg" | shasum -a 256 --check
+```
+
+### Range Requests (`Accept-Ranges`)
+
+Supporting HTTP range requests allows clients to resume an interrupted download instead of starting over, which is valuable for large installers and on unreliable networks.
+
+A server advertises support with the [`Accept-Ranges`](https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/Accept-Ranges) header set to `Accept-Ranges: bytes`. Clients then request a portion of the file using the [`Range`](https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/Range) request header, and the server responds with `206 Partial Content`.
+
+```
+Accept-Ranges: bytes
+```
+
+You can resume an interrupted download with curl using the `-C -` option:
+
+```
+curl -LOJ -C - https://example.com/download/product.pkg
+```
 
 # References and Resources
 
