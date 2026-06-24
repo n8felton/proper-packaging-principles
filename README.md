@@ -453,6 +453,63 @@ Scripts are appropriate for work the payload genuinely cannot express, such as:
 
 Even then, keep scripts small, idempotent, and free of assumptions about the user environment, and prefer the supported deployment-tool mechanisms over reimplementing them inside the package.
 
+Common mistakes in install scripts — and in packages generally — are catalogued in [Appendix F](#appendix-f---common-packaging-anti-patterns).
+
+# Appendix F - Common Packaging Anti-Patterns
+
+A handful of mistakes show up again and again in real-world packages — both in install scripts and in package structure — many of them catalogued in the [Mac Package Hall of Shame](https://macpkghallofshame.tumblr.com). These are the counterparts to the principles in the [Summary](#summary) and the guidance in [Appendix E](#appendix-e---pre-and-postinstall-scripts).
+
+### Empty payload, all logic in scripts
+
+A package whose payload contains no files — with every install action performed by a `preinstall`/`postinstall` script — is not really a package. The macOS receipts store records nothing meaningful, so deployment tools cannot determine what was installed, compare versions, or cleanly remove the software. Ship the actual files in the payload and reserve scripts for the narrow cases in [When a Script Is Justified](#when-a-script-is-justified). See also [Avoid install scripts; prefer the payload](#summary).
+
+### Launching the app from a script
+
+A `postinstall` that ends by opening the application assumes a GUI session and a logged-in user, and races the installer's own completion. Under an unattended MDM, Munki, or `installer` deployment there may be no user to launch the app for. Let the user — or the management tool — launch the app once the install has finished.
+
+### Unquoted and hard-coded variables
+
+Unquoted shell variables break on paths containing spaces, and hard-coded paths (a specific home directory, `/Applications`, the boot volume) break under unattended or alternate-volume installs. Quote every expansion and use the [Installer environment variables](#installer-environment-variables) instead of literals.
+
+### Iterating users from a root context
+
+Scripts run as root with no user context. Writing into `~/Library`, touching the keychain, or looping over `/Users` to "set up each user" produces permission prompts, ownership bugs, or silent failures. Per-user setup belongs in a `LaunchAgent` or a first-run routine, not an install script.
+
+### Misspelled or non-executable script names
+
+The Installer only runs scripts named exactly `preinstall` and `postinstall` (no extension) with the executable bit set. A typo or a `.sh` suffix means the script silently never runs, and the install appears to succeed while doing none of the work the script was meant to perform.
+
+### Redundant sudo / launchctl calls
+
+Calling `sudo` from an already-root script is redundant noise. Bootstrapping a daemon that the payload's `LaunchDaemon` already registers is worse — it can produce duplicate-load errors. Let the payload and the install context do their jobs rather than re-invoking privilege or service-management commands the system already handles.
+
+### "Universal" packages that are not
+
+Labeling a package `universal` while it actually bundles architecture-specific binaries as script resources (and selects one at install time) is misleading and brittle. A genuinely universal package ships universal (fat) binaries, or `arm64` and `x86_64` payloads that install correctly on either architecture. If a package is architecture-specific, name it honestly per [Appendix A](#appendix-a---package-filename-naming-conventions) rather than calling it `universal`.
+
+### Doing work during the check phase
+
+The distribution `installation-check` / `volume-check` phase exists to decide _whether_ the install can proceed — it runs **before the user approves the installation**. Performing real installation work there (unpacking payloads, running the equivalent of a preinstall) installs software the user has not yet agreed to install. Keep checks read-only and side-effect-free; do installation work in the payload and, only when unavoidable, in the install scripts.
+
+### Bloated payloads
+
+Bundling a large runtime or framework that the system already provides (or that could be a separate, shared dependency) inflates download size and duplicates files across packages. Ship only what your software actually needs, and depend on system-provided frameworks where they exist rather than carrying your own copy.
+
+### Overly permissive file modes
+
+Setting files or bundles to world-writable `777` permissions — whether in the payload or "fixed up" by a script — is a security problem: any local user can replace the executable that later runs with elevated privileges. Set the least-permissive mode that works (typically `0644` for files and `0755` for executables and directories), and record those modes in the payload so the receipt restores them correctly.
+
+### Unnecessary wrapping and redistributable formats
+
+Nesting redistributable formats — a `.zip` containing a `.dmg` containing a drag-install app, or a flat `.pkg` wrapped inside another `.pkg` purely to smuggle a Scripts folder — adds friction without benefit. Distribute a single, signed, notarized flat `.pkg` (see [Build native macOS packages](#summary)). A read-write disk image used as a delivery wrapper is an additional red flag, since it invites tampering with its contents.
+
+### Depending on external files or fixed locations
+
+A package must be self-contained: it should install correctly given nothing but the `.pkg` file itself. Do not require companion files to sit next to the package (e.g. a `config.plist`, license file, or second installer in the same folder), and do not expect files to be pre-seeded at a fixed path such as `[/private]/tmp`.
+
+Deployment tools rarely install a package from the folder a developer built it in. MDM, Munki, and `installer -pkg` typically copy _only_ the `.pkg` to a managed cache or staging directory before installing, so anything that was beside it — or assumed to exist elsewhere on disk — is gone. A package that relies on such files works when double-clicked from the developer's Downloads folder and then fails everywhere it is actually deployed.
+
+Bundle everything the install needs **inside** the package payload (or resources), and reference it through the [Installer environment variables](#installer-environment-variables) rather than absolute paths. Configuration and licensing that genuinely must come from outside the package belong in [MDM profiles or a first-run flow](#licensing-separately), not in loose files the package hopes to find.
 
 # References and Resources
 
