@@ -272,7 +272,7 @@ curl -LOJ -C - https://example.com/download/product.pkg
 
 # Appendix D - Component Package Identifiers
 
-Many popular software deployment tools reference the macOS "receipts database" to query metadata about installed software packages, such as file paths, package versions, and installation dates. This information is used to determine if a software package needs to be updated.
+Many popular software deployment tools reference the macOS receipts store to query metadata about installed software packages, such as file paths, package versions, and installation dates. This information is used to determine if a software package needs to be updated. Despite often being called a "receipts database", it is not a single database but a set of receipt files — a `.plist` (metadata) and a `.bom` (bill of materials) per package — kept under `/var/db/receipts/`.
 
 This information is linked to the component package identifier. Therefore, it is highly recommended to choose a recognizable identifier that follows macOS conventions and to maintain consistency with it.
 
@@ -280,14 +280,24 @@ This information is linked to the component package identifier. Therefore, it is
 >
 > — <cite>`pkgbuild` man page</cite>
 
+The identifier alone does not determine whether a package is installed — it is how the Installer and deployment tools _locate_ the matching receipt. Once an identifier matches, the package **version** is compared to decide whether the package is an upgrade or a downgrade. Both the identifier and a meaningful version are required for reliable update detection (see [Package Version](#package-version)).
+
 Component package identifiers typically use reverse domain name notation, for example, `com.example.Product`.
+
+### Component vs. Distribution Identifiers
+
+`pkgbuild` builds a _component_ package and sets its `--identifier`. This is the identifier recorded under `/var/db/receipts/` and the one deployment tools read. `productbuild` wraps one or more component packages into a _distribution_ (product) archive, which can carry its own separate identifier. That outer identifier is metadata for the distribution file and is not what tools match against the receipts store, so the guidance here applies to the **component** identifier.
 
 ## Best Practices
 
 1. Use reverse domain name notation, for example `com.example.Product`.
 1. Choose a recognizable, meaningful identifier and keep it consistent across versions.
+1. Never change the identifier between releases. A changed identifier looks like a different, unrelated package: the old receipt is orphaned, the upgrade is missed, and admins must intervene manually.
+1. Always set a meaningful package version (`pkgbuild --version`). Do not ship the default of `0`, which prevents proper upgrade/downgrade detection.
+1. Restrict identifiers to reverse-DNS characters — ASCII letters, digits, `.`, and `-` — and keep casing consistent. Avoid spaces, underscores, and other punctuation.
 1. Optionally include a `pkg` segment, for example `com.example.pkg.Product`.
-1. Only include a version when multiple versions can be installed, used, and updated side-by-side.
+1. Use a distinct identifier for each component when one distribution package ships multiple payloads (app, helper, framework), sharing a common prefix, for example `com.example.pkg.Product.Helper`. Do not reuse one identifier for unrelated payloads.
+1. Only embed a version in the identifier string when multiple versions can be installed, used, and updated side-by-side.
 
 ### Examples
 
@@ -322,11 +332,21 @@ com.ninxsoft.pkg.mist-cli
 fr.whitebox.pkg.Packages
 ```
 
+### Package Version
+
+The package version is distinct from the version that may appear _inside_ an identifier string. Every package carries a version, set with `pkgbuild --version`, that is recorded in the receipt.
+
+> Packages with the same identifier are compared using this version, to determine if the package is an upgrade or downgrade. If you don't specify a version, a default of zero is assumed, but this may prevent proper upgrade/downgrade checking.
+>
+> — <cite>`pkgbuild` man page</cite>
+
+In other words, the identifier selects the receipt and the package version decides the rest, so always set a meaningful version that goes up with each release rather than shipping the default `0`. This package version is separate from the application's `CFBundleShortVersionString` and need not match it, though keeping them aligned avoids confusion (see [Version numbers go up](#summary)).
+
 ### Versioning Identifiers
 
-Versions should only be used in component package identifiers when multiple versions of a product can be installed, used, and updated side-by-side. Otherwise, version information does not belong in the component package identifier.
+A version should only be embedded in the identifier string itself when multiple versions of a product can be installed, used, and updated side-by-side. Otherwise, version information does not belong in the identifier — the package version (above) already tracks it.
 
-This is why identifiers such as `com.example.Product.15` and `com.amazon.corretto.17` carry a version: they identify a specific major version that is intended to coexist with other major versions on the same system. When only one version of a product is installed at a time, omit the version so the macOS Installer can recognize new packages as upgrades.
+This is why identifiers such as `com.example.Product.15` and `com.amazon.corretto.17` carry a version: they identify a specific major version that is intended to coexist with other major versions on the same system. When only one version of a product is installed at a time, omit the version from the identifier so the macOS Installer can recognize new packages as upgrades. Embedding a changing version in the identifier of a single-instance product breaks upgrade detection, leaving an orphaned receipt for every release.
 
 ### Related Commands
 
