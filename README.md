@@ -38,7 +38,7 @@ The [recommended format](https://developer.apple.com/documentation/bundleresourc
 # Appendix A - Package Filename Naming Conventions
 ## Best Practices
 1. Include your vendor/developer name and/or the product/project name.
-2. Include the architecture type, using `arch` or `uname -m` types, or `universal`.
+2. Include the architecture type, using `uname -m` values, or `universal`.
 3. Include the version number.
 
 Using these best practices allows for key metadata about the package to be known without needing to inspect the package. It also helps to avoid filenames such as `Installer (1).pkg` and `product (2).pkg` when downloading multiple architectures or versions of the same software package.
@@ -58,7 +58,7 @@ Ultimately, the package filename should be recognizable and easy to identify wha
 # Appendix B - Static Download URLs
 ## Best Practices
 1. The URL should be static and NOT contain any metadata that will change with each package.
-2. If including the architecture type, use `arch` or `uname -m` types, or `universal`.
+2. If including the architecture type, use `uname -m` values, or `universal`.
 3. Use the `Content-Disposition` HTTP header with type `attachment`  and the `filename` parameter.
 4. Use TLS (HTTPS)
 5. Use a domain name that matches the vendor and/or product name(s)
@@ -89,9 +89,12 @@ A static URL (redirects acceptable), but contains metadata such as `arch` and `r
 * https://dl.google.com/dl/chrome/mac/universal/beta/GoogleChromeBeta-Enterprise.pkg
 
 ### Including Architecture Type
-Using the output of `arch` or `uname -m` allows for automation when acquiring software. Note that these values should match those used with macOS and not any other operating system as they are often reported differently. `x86_64` (Intel) or `arm64` (Apple Silicon) are currently the 2 most commonly reported machine architectures using this method.
+Using the output of `uname -m` allows for automation when acquiring software. On macOS this reports `x86_64` (Intel) or `arm64` (Apple Silicon), the 2 most commonly reported machine architectures.
 
-    curl -LOJ https://example.com/download/product/$(arch)/release/latest
+Note that these values should match those used with macOS and not any other operating system, as they are often reported differently. The Apple Silicon token is the most common pitfall: macOS reports `arm64`, while Linux reports `aarch64` for the same architecture. Use the macOS value (`arm64`).
+
+Prefer `uname -m` over the `arch` command. On macOS, `arch` with no arguments reports `i386` on Intel (not `x86_64`), so it is not suitable for this purpose.
+
     curl -LOJ https://example.com/download/product/$(uname -m)/release/latest
 
 ### `Content-Disposition` HTTP Header
@@ -107,7 +110,7 @@ This header is supported by modern browsers, as well as many of the tools and la
 
 #### Test URL
 This URL will generate the appropriate header to help build and test automations against.
-```bash
+```
 https://httpbin.org/response-headers?content-disposition=%20attachment%3Bfilename%3D%22product-arm64-1.21.42.pkg%22
 ```
 You can test this yourself with curl
