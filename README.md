@@ -358,6 +358,102 @@ This is why identifiers such as `com.example.Product.15` and `com.amazon.corrett
 
 `pkgutil --files <package-id>` — Print a list of files on disk that are associated with the specified `<package-id>`
 
+# Appendix E - Pre- and Postinstall Scripts
+
+A flat package can carry `preinstall` and `postinstall` scripts that run, as root, before and after the payload is laid down. They are a powerful escape hatch, but they are also the single most common source of packaging bugs: they run with full privileges, are opaque to the tools admins use to inspect a package, and behave differently depending on _how_ the package is installed. The guidance here is, in order: avoid scripts when the payload can do the job, and when you do need a script, make it safe and environment-aware.
+
+## Best Practices
+
+1. Prefer the package payload over a script. Ship files at their final path with the correct owner, group, and mode rather than fixing them up afterward.
+1. Do not use a script to do what `pkgbuild` already does — setting ownership/permissions, placing a `LaunchDaemon`, or writing a static file are all payload concerns.
+1. Never assume an interactive GUI session. Scripts run unattended under MDM, Munki, and the `installer` command, often with no logged-in user.
+1. Do not kill or relaunch applications with `pkill -9` / `open`. There may be no user, no GUI, and no safe moment to do so.
+1. Make scripts idempotent and fail loudly. Exit non-zero on real failure so deployment tools can detect it.
+1. Use the environment variables the Installer provides instead of hard-coding paths.
+
+### Prefer the Payload
+
+The most common postinstall scripts do nothing a properly built payload could not do:
+
+- `chown` / `chgrp` / `chmod` to set ownership and permissions — `pkgbuild` records the owner, group, and mode of every file in the payload and restores them on install. Build your payload with the final permissions in place.
+- Moving a file into `/Library/LaunchDaemons` — place the file at its final path inside the payload root so it is installed there directly.
+- `cat`-ing a heredoc to create a static configuration file — ship that file as part of the payload.
+
+If the only thing a script does is reshape files that the payload could have placed correctly, delete the script and fix the payload.
+
+### Do Not Assume an Interactive Environment
+
+A package installed interactively through `Installer.app` runs in a very different context from one installed by the `installer` command in a Terminal, or by a `LaunchDaemon`-based agent such as an MDM client or Munki. In the latter cases there is frequently **no logged-in user, no GUI session, and no `Aqua` security context**. Scripts that assume otherwise fail in surprising ways.
+
+A widely shared anti-pattern illustrates the problem:
+
+```bash
+#!/bin/bash
+
+sudo pkill -9 BrowserStackLocal.app
+sudo open /Applications/BrowserStackLocal.app
+```
+
+This is wrong on several counts: the script already runs as root, so `sudo` is redundant; `pkill -9` denies the application any chance to shut down cleanly; and `open` assumes a GUI session that may not exist during an unattended install.
+
+If an application must be quit before its files are replaced, the package itself can declare that requirement natively rather than forcing it from a script. The distribution XML provides a [`must-close`](https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/DistributionDefinitionRef/Chapters/Distribution_XML_Ref.html) element that lists the bundle identifiers of applications that must be closed before the package installs. It is associated with a package by placing it inside a `pkg-ref` of the same `id`:
+
+```xml
+<pkg-ref id="com.example.pkg.Product">Product.pkg</pkg-ref>
+<pkg-ref id="com.example.pkg.Product">
+    <must-close>
+        <app id="com.example.Product"/>
+    </must-close>
+</pkg-ref>
+```
+
+When installed interactively, `Installer.app` prompts the user to quit the listed applications. Deployment tools offer their own equivalents for unattended installs (Munki's `blocking_applications`, an MDM's "blocking applications" setting, etc.). Either way, declaring the requirement is far safer than a script that force-kills processes.
+
+When installing via the `installer` command, the Installer sets the `COMMAND_LINE_INSTALL` environment variable, which a script can check to detect a non-interactive install and skip any GUI-dependent behavior:
+
+```bash
+if [ -n "$COMMAND_LINE_INSTALL" ]; then
+    # Non-interactive install (installer command, MDM, Munki); do not touch the GUI.
+    exit 0
+fi
+```
+
+### Installer Environment Variables
+
+When the macOS Installer runs your scripts, it sets a number of environment variables describing the install context. Use these instead of hard-coding paths so your scripts work regardless of the target volume or install location:
+
+| Variable | Meaning |
+| ------------------------- | -------------------------------------------------------------------- |
+| `$INSTALLER_TEMP` | Scratch directory for the install, cleaned up afterward |
+| `$PACKAGE_PATH` | Full path to the component package being installed |
+| `$SCRIPT_PATH` | Full path to the script currently executing |
+| `$INSTALL_PKG_SESSION_ID` | Identifier for the overall install session |
+| `$COMMAND_LINE_INSTALL` | Set when installing via the `installer` command, not `Installer.app` |
+
+In addition to these environment variables, the Installer passes three positional arguments to every script:
+
+```bash
+#!/bin/bash
+# $1 = full path to the package
+# $2 = full path to the installation destination (e.g. /Applications)
+# $3 = the mountpoint of the destination volume (e.g. /)
+
+dest_volume="$3"
+```
+
+Do not assume the destination is the boot volume `/`; honor `$3` so your script behaves correctly when the package is targeted at another volume.
+
+### When a Script Is Justified
+
+Scripts are appropriate for work the payload genuinely cannot express, such as:
+
+- Migrating or removing state left by a previous version that the new payload does not overwrite.
+- Triggering a one-time action that must happen at install time (e.g. `kextcache`/`kmutil` invalidation, `bootstrap`-ing a system daemon with `launchctl bootstrap`).
+- Conditional logic that depends on the runtime state of the target system.
+
+Even then, keep scripts small, idempotent, and free of assumptions about the user environment, and prefer the supported deployment-tool mechanisms over reimplementing them inside the package.
+
+
 # References and Resources
 
 ## Apple Software Versions
