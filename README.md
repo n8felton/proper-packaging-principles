@@ -13,6 +13,12 @@ These proper packaging principles are meant to be a guideline for software devel
    Most tools available to manage software deployments use version numbers to determine if a software package needs to be installed or updated. No matter how minor a change to software package, the version number should be incremented to ensure these tools know they need to install or update the package.
    The [recommended format](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring) is three period-separated integers, such as 1.21.42. See also: [semver](https://semver.org)
 
+1. **Choose a good, stable component package identifier**
+
+   Software deployment tools query the macOS receipts database — keyed on the component package identifier — to determine what is installed and whether it needs updating. Choose a recognizable reverse-domain identifier (e.g. `com.example.Product`), keep it consistent across versions, and only encode a version in the identifier when multiple versions install side-by-side.
+
+   See [Appendix D](#appendix-d---component-package-identifiers) for more details.
+
 1. **Naming conventions are necessary and helpful**
 
    Give your packages meaningful names and version numbers. `Installer.pkg` or `product.pkg` is not helpful and can lead to filenames such as `Installer (1).pkg` and `product (2).pkg` cluttering up the Downloads folder. Instead, consider filenames that include your vendor and/or product name, compiled architecture, and version number, e.g. `product-{arch}-{version}.pkg`.
@@ -263,6 +269,72 @@ You can resume an interrupted download with curl using the `-C -` option:
 ```
 curl -LOJ -C - https://example.com/download/product.pkg
 ```
+
+# Appendix D - Component Package Identifiers
+
+Many popular software deployment tools reference the macOS "receipts database" to query metadata about installed software packages, such as file paths, package versions, and installation dates. This information is used to determine if a software package needs to be updated.
+
+This information is linked to the component package identifier. Therefore, it is highly recommended to choose a recognizable identifier that follows macOS conventions and to maintain consistency with it.
+
+> The macOS Installer recognizes a package as an upgrade to an already-installed package only if the package identifiers match. Therefore, it is advisable to set a meaningful, consistent identifier when you build the package.
+>
+> — <cite>`pkgbuild` man page</cite>
+
+Component package identifiers typically use reverse domain name notation, for example, `com.example.Product`.
+
+## Best Practices
+
+1. Use reverse domain name notation, for example `com.example.Product`.
+1. Choose a recognizable, meaningful identifier and keep it consistent across versions.
+1. Optionally include a `pkg` segment, for example `com.example.pkg.Product`.
+1. Only include a version when multiple versions can be installed, used, and updated side-by-side.
+
+### Examples
+
+#### Good
+
+```
+com.example.product
+com.example.Product
+com.example.Product.15
+```
+
+##### Real-world Examples
+
+```
+com.amazon.corretto.17
+com.apple.MacEvalUtility
+com.tapbots.Ivory
+```
+
+#### Better
+
+```
+com.example.pkg.Product
+com.example.pkg.Product15
+```
+
+##### Real-world Examples
+
+```
+com.apple.pkg.Xcode
+com.ninxsoft.pkg.mist-cli
+fr.whitebox.pkg.Packages
+```
+
+### Versioning Identifiers
+
+Versions should only be used in component package identifiers when multiple versions of a product can be installed, used, and updated side-by-side. Otherwise, version information does not belong in the component package identifier.
+
+This is why identifiers such as `com.example.Product.15` and `com.amazon.corretto.17` carry a version: they identify a specific major version that is intended to coexist with other major versions on the same system. When only one version of a product is installed at a time, omit the version so the macOS Installer can recognize new packages as upgrades.
+
+### Related Commands
+
+`pkgutil --pkgs` — List all installed package IDs
+
+`pkgutil --pkg-info <package-id>` — Print extended information about the specified `<package-id>`
+
+`pkgutil --files <package-id>` — Print a list of files on disk that are associated with the specified `<package-id>`
 
 # References and Resources
 
