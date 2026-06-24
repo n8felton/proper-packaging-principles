@@ -403,11 +403,11 @@ Two consequences matter for packaging:
 
 #### Summary
 
-| Key                          | Audience         | Format rule                                              | Notes                                              |
-| ---------------------------- | ---------------- | -------------------------------------------------------- | -------------------------------------------------- |
-| `CFBundleShortVersionString` | User-visible     | Exactly three period-separated integers (`Major.Minor.Patch`); digits and periods only | The release version; drives package filenames      |
-| `CFBundleVersion`            | Machine-readable | One to three integers; extras ignored; missing treated as `0` | Increment on every distributed build; App Store requires it |
-| `pkgbuild --version`         | Deployment tools | Set by the packager                                      | The *package* version in the receipts store, not a bundle key |
+| Key                          | Audience         | Format rule                                                                            | Notes                                                         |
+| ---------------------------- | ---------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `CFBundleShortVersionString` | User-visible     | Exactly three period-separated integers (`Major.Minor.Patch`); digits and periods only | The release version; drives package filenames                 |
+| `CFBundleVersion`            | Machine-readable | One to three integers; extras ignored; missing treated as `0`                          | Increment on every distributed build; App Store requires it   |
+| `pkgbuild --version`         | Deployment tools | Set by the packager                                                                    | The *package* version in the receipts store, not a bundle key |
 
 ## Apple Developer References
 
