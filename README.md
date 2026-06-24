@@ -151,15 +151,11 @@ cat "product-arm64-1.21.42.pkg"
 
 - https://dl.pstmn.io/download/latest/osx ([Postman](https://www.postman.com))
 
-  `Content-Disposition: attachment; filename=Postman%20v9.11.0%20for%20macOS%20(x64).zip`
+  `Content-Disposition: attachment; filename=Postman%20for%20macOS%20(x64).zip`
 
 - https://launcher-public-service-prod06.ol.epicgames.com/launcher/api/installer/download/EpicGamesLauncher.dmg
 
-  `Content-Disposition: filename=EpicInstaller-14.6.2.dmg`
-
-- https://go.microsoft.com/fwlink/?linkid=2093504 (Microsoft Edge - Stable)
-
-  `Content-Disposition: attachment; filename=MicrosoftEdge-112.0.1722.64.pkg`
+  `Content-Disposition: attachment; filename=EpicInstaller-20.1.0.dmg`
 
 ### Use TLS (HTTPS)
 
