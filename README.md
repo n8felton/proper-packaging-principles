@@ -15,15 +15,9 @@ These proper packaging principles are meant to be a guideline for software devel
 
    Note that an application carries two distinct version keys — the user-visible release version (`CFBundleShortVersionString`) and the machine-readable build version (`CFBundleVersion`) — and the macOS package itself carries its own `pkgbuild --version`. See [Apple's Version Keys](#apples-version-keys-cfbundleshortversionstring-vs-cfbundleversion) for how these relate.
 
-1. **Choose a good, stable component package identifier**
-
-   Software deployment tools query the macOS receipts database — keyed on the component package identifier — to determine what is installed and whether it needs updating. Choose a recognizable reverse-domain identifier (e.g. `com.example.Product`), keep it consistent across versions, and only encode a version in the identifier when multiple versions install side-by-side.
-
-   See [Appendix D](#appendix-d---component-package-identifiers) for more details.
-
 1. **Naming conventions are necessary and helpful**
 
-   Give your packages meaningful names and version numbers. `Installer.pkg` or `product.pkg` is not helpful and can lead to filenames such as `Installer (1).pkg` and `product (2).pkg` cluttering up the Downloads folder. Instead, consider filenames that include your vendor and/or product name, compiled architecture, and version number, e.g. `product-{arch}-{version}.pkg`.
+   Give your packages meaningful names and version numbers. `Installer.pkg` or `product.pkg` is not helpful and can lead to filenames such as `Installer (1).pkg` and `product (2).pkg` cluttering up the Downloads folder. Instead, consider filenames that include your vendor and/or product name, compiled architecture, and version number, e.g. `product-{arch}-{version}.pkg`. The architecture token must reflect what the package actually contains — only label a package `universal` when it ships genuine universal (fat) binaries (see [Appendix F](#universal-packages-that-are-not)).
 
    See [Appendix A](#appendix-a---package-filename-naming-conventions) for more details.
 
@@ -40,9 +34,23 @@ These proper packaging principles are meant to be a guideline for software devel
 
    See [Appendix C](#appendix-c---serving-downloads-http-headers--integrity) for more details.
 
+1. **Choose a good, stable component package identifier**
+
+   Software deployment tools query the macOS receipts database — keyed on the component package identifier — to determine what is installed and whether it needs updating. Choose a recognizable reverse-domain identifier (e.g. `com.example.Product`), keep it consistent across versions, and only encode a version in the identifier when multiple versions install side-by-side.
+
+   See [Appendix D](#appendix-d---component-package-identifiers) for more details.
+
 1. **Do not assume that your package will be installed interactively via the GUI (Installer.app)**
 
-   In the age of Mobile Device Management (MDM), installation via the [`InstallApplication`](https://developer.apple.com/documentation/devicemanagement/installapplicationcommand/command) command is possible, in addition to command line installations via the `installer` command.
+   In the age of Mobile Device Management (MDM), installation via the [`InstallApplication`](https://developer.apple.com/documentation/devicemanagement/installapplicationcommand/command) command is possible, in addition to command line installations via the `installer` command. Under these unattended installs there is frequently no logged-in user and no GUI session, so neither the package nor its scripts should depend on one.
+
+   See [Appendix E — Do Not Assume an Interactive Environment](#do-not-assume-an-interactive-environment) for more details.
+
+1. **Avoid install scripts; prefer the payload**
+
+   Pre- and postinstall scripts run as root, are hard to inspect, and behave differently depending on how the package is installed. Most of what they commonly do — setting file ownership and permissions, placing a LaunchDaemon, or writing a configuration file — can be expressed declaratively by the package payload instead. Reserve scripts for work the payload genuinely cannot do, and never assume an interactive GUI environment.
+
+   See [Appendix E](#appendix-e---pre-and-postinstall-scripts) for more details.
 
    <!----><a name="licensing-separately"></a>
 
@@ -556,11 +564,11 @@ Two consequences matter for packaging:
 
 #### Summary
 
-| Key                          | Audience         | Format rule                                                                            | Notes                                                         |
+| Key | Audience | Format rule | Notes |
 | ---------------------------- | ---------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `CFBundleShortVersionString` | User-visible     | Exactly three period-separated integers (`Major.Minor.Patch`); digits and periods only | The release version; drives package filenames                 |
-| `CFBundleVersion`            | Machine-readable | One to three integers; extras ignored; missing treated as `0`                          | Increment on every distributed build; App Store requires it   |
-| `pkgbuild --version`         | Deployment tools | Set by the packager                                                                    | The *package* version in the receipts store, not a bundle key |
+| `CFBundleShortVersionString` | User-visible | Exactly three period-separated integers (`Major.Minor.Patch`); digits and periods only | The release version; drives package filenames |
+| `CFBundleVersion` | Machine-readable | One to three integers; extras ignored; missing treated as `0` | Increment on every distributed build; App Store requires it |
+| `pkgbuild --version` | Deployment tools | Set by the packager | The *package* version in the receipts store, not a bundle key |
 
 ## Apple Developer References
 
