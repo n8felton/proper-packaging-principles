@@ -11,7 +11,9 @@ These proper packaging principles are meant to be a guideline for software devel
 1. **Version numbers go up**
 
    Most tools available to manage software deployments use version numbers to determine if a software package needs to be installed or updated. No matter how minor a change to software package, the version number should be incremented to ensure these tools know they need to install or update the package.
-   The [recommended format](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring) is three period-separated integers, such as 1.21.42. See also: [semver](https://semver.org)
+   The [recommended format](https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundleshortversionstring) is three period-separated integers, such as 1.21.42. See also: [semver](https://semver.org)
+
+   Note that an application carries two distinct version keys — the user-visible release version (`CFBundleShortVersionString`) and the machine-readable build version (`CFBundleVersion`) — and the macOS package itself carries its own `pkgbuild --version`. See [Apple's Version Keys](#apples-version-keys-cfbundleshortversionstring-vs-cfbundleversion) for how these relate.
 
 1. **Choose a good, stable component package identifier**
 
@@ -360,9 +362,52 @@ This is why identifiers such as `com.example.Product.15` and `com.amazon.corrett
 
 ## Apple Software Versions
 
-- https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleversion
-- https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring
+- https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundleversion
+- https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundleshortversionstring
 - https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/DistributionDefinitionRef/Chapters/Distribution_XML_Ref.html
+
+### Apple's Version Keys: `CFBundleShortVersionString` vs. `CFBundleVersion`
+
+A macOS application bundle (`.app`) declares its version in two separate `Info.plist` keys. They serve different audiences and follow different rules, and confusing them is a common packaging mistake.
+
+#### `CFBundleShortVersionString` — the release version
+
+This is the **user-visible** release or version number of the bundle — the value users see in the Finder's *Get Info* panel and in an app's *About* window.
+
+> This key is a user-visible string for the version of the bundle. The required format is three period-separated integers, such as 10.14.1. The string can only contain numeric characters (0-9) and periods.
+>
+> — <cite>[`CFBundleShortVersionString`, Apple Developer Documentation](https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundleshortversionstring)</cite>
+
+Each integer describes the release in the format `[Major].[Minor].[Patch]`:
+
+- **Major**: A major revision number.
+- **Minor**: A minor revision number.
+- **Patch**: A maintenance release number.
+
+This is the closest of Apple's keys to [semver](https://semver.org), and it is the value that should drive the version embedded in your [package filename](#appendix-a---package-filename-naming-conventions) and `Content-Disposition` header (e.g. the `1.21.42` in `product-arm64-1.21.42.pkg`).
+
+#### `CFBundleVersion` — the build version
+
+This is a **machine-readable** build version that identifies a specific iteration of the bundle. It is more permissive than `CFBundleShortVersionString`:
+
+> This key is a machine-readable string composed of one to three period-separated integers, such as 10.14.1. […] You can include more integers but the system ignores them. You can also abbreviate the build version by using only one or two integers, where missing integers in the format are interpreted as zeros. For example, 0 specifies 0.0.0, 10 specifies 10.0.0, and 10.5 specifies 10.5.0.
+>
+> This key is required by the App Store and is used throughout the system to identify the version of the build. For macOS apps, increment the build version before you distribute a build.
+>
+> — <cite>[`CFBundleVersion`, Apple Developer Documentation](https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundleversion)</cite>
+
+Two consequences matter for packaging:
+
+- **Increment it on every distributed build.** Even when the user-visible `CFBundleShortVersionString` is unchanged, the build version should go up so the system can distinguish iterations — the same "version numbers go up" principle applies at the build level.
+- **It is not the package version.** The macOS *package* tracks its own version via `pkgbuild --version`, recorded in the receipt and used by deployment tools for upgrade/downgrade detection (see [Appendix D — Package Version](#package-version)). That package version is separate from both bundle keys, though keeping them aligned avoids confusion.
+
+#### Summary
+
+| Key                          | Audience         | Format rule                                              | Notes                                              |
+| ---------------------------- | ---------------- | -------------------------------------------------------- | -------------------------------------------------- |
+| `CFBundleShortVersionString` | User-visible     | Exactly three period-separated integers (`Major.Minor.Patch`); digits and periods only | The release version; drives package filenames      |
+| `CFBundleVersion`            | Machine-readable | One to three integers; extras ignored; missing treated as `0` | Increment on every distributed build; App Store requires it |
+| `pkgbuild --version`         | Deployment tools | Set by the packager                                      | The *package* version in the receipts store, not a bundle key |
 
 ## Apple Developer References
 
